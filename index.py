@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify, render_template
 import joblib
 import numpy as np
@@ -14,12 +15,13 @@ except Exception as e:
     df, tfidf_vectorizer, nn_model = None, None, None
 
 def fetch_poster(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=c7ec19ffdd3279641fb606d19ceb9bb1&language=en-US"
+    api_key = os.getenv("TMDB_API_KEY", "c7ec19ffdd3279641fb606d19ceb9bb1")  # Use environment variable
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
     data = requests.get(url).json()
-    poster_path = data.get("poster_path", "")  # Handle missing poster
+    poster_path = data.get("poster_path", "")  
     if poster_path:
         return f"https://image.tmdb.org/t/p/w500/{poster_path}"
-    return "https://via.placeholder.com/150"  # Default image if no poster
+    return "https://via.placeholder.com/150" 
 
 def recommend_movies(movie_name, n=5):
     if not tfidf_vectorizer or not nn_model:
@@ -31,7 +33,7 @@ def recommend_movies(movie_name, n=5):
     recommendations = []
     for index in indices[0]:
         movie_title = df.iloc[index]["title"]
-        movie_id = df.iloc[index]["id"]  # Ensure your dataset has a movie ID
+        movie_id = df.iloc[index]["id"]  
         poster_url = fetch_poster(movie_id)
         recommendations.append({"title": movie_title, "poster": poster_url})
     
@@ -49,4 +51,5 @@ def recommend():
     return jsonify({"recommendations": recommendations})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Use environment variable for Render
+    app.run(host="0.0.0.0", port=port, debug=True)
