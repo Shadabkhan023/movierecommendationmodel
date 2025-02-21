@@ -1,10 +1,11 @@
 {
     "version": 2,
-    "functions": {
-      "index.py": {
-        "runtime": "python@3.9",
-        "includeFiles": "index.py"
-      }
-    }
+    "builds": [
+      { "src": "index.py", "use": "@vercel/python" }
+    ],
+    "routes": [
+      { "src": "/(.*)", "dest": "index.py" }
+    ]
   }
+
   
